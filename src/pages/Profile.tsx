@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ROUTES } from "@/constants/routes";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Settings,
   Award,
@@ -16,6 +17,7 @@ import {
   Users,
   BookOpen,
   LogOut,
+  User,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -30,9 +32,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Profile() {
-  const handleLogout = () => {
-    // Logout logic will be implemented in Phase 5
-    console.log("Logout");
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const sustainabilityStats = {
@@ -48,6 +51,18 @@ export default function Profile() {
     { icon: Droplet, title: "Water Saver", description: "Select water-efficient products", progress: 40 },
   ];
 
+  // Get display name from user email or metadata
+  const displayName = user?.user_metadata?.display_name || 
+    user?.email?.split("@")[0] || 
+    "EcoVerify User";
+  
+  const userInitials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <Layout>
       <div className="container px-4 py-6 space-y-6">
@@ -58,13 +73,13 @@ export default function Profile() {
               <Avatar className="h-24 w-24 border-4 border-primary/20">
                 <AvatarImage src="" alt="User" />
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-                  EU
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-center sm:text-left space-y-2">
-                <h1 className="text-2xl font-bold">EcoVerify User</h1>
+                <h1 className="text-2xl font-bold">{displayName}</h1>
                 <p className="text-muted-foreground">
-                  Member since January 2025
+                  {user?.email}
                 </p>
                 <div className="flex gap-2 justify-center sm:justify-start">
                   <Badge variant="secondary">
