@@ -14,6 +14,9 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import CompanyProfile from "./pages/CompanyProfile";
 import Settings from "./pages/Settings";
+import Education from "./pages/Education";
+import Alternatives from "./pages/Alternatives";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,12 +38,12 @@ const App = () => (
               <Route path={ROUTES.HISTORY} element={<History />} />
               <Route path={ROUTES.PROFILE} element={<Profile />} />
               <Route path={ROUTES.SETTINGS} element={<Settings />} />
+              <Route path={ROUTES.EDUCATION} element={<Education />} />
+              <Route path={ROUTES.ALTERNATIVES} element={<Alternatives />} />
+              <Route path={ROUTES.ONBOARDING} element={<Onboarding />} />
               {/* Placeholder routes - will be implemented in later phases */}
-              <Route path={ROUTES.ALTERNATIVES} element={<div>Alternatives - Coming Soon</div>} />
-              <Route path={ROUTES.EDUCATION} element={<div>Education - Coming Soon</div>} />
               <Route path={ROUTES.LOGIN} element={<div>Login - Coming Soon</div>} />
               <Route path={ROUTES.REGISTER} element={<div>Register - Coming Soon</div>} />
-              <Route path={ROUTES.ONBOARDING} element={<div>Onboarding - Coming Soon</div>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

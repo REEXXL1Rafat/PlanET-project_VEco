@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EcoScoreDisplay } from "@/components/EcoScoreDisplay";
 import { ImpactChart } from "@/components/ImpactChart";
 import { ShareButton } from "@/components/ShareButton";
+import { CommunityReportDialog } from "@/components/CommunityReportDialog";
 import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, 
   Heart, 
-  Flag, 
   Package, 
   Building2,
   ExternalLink,
@@ -18,23 +18,6 @@ import {
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { toast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // Mock product data - will be replaced with actual API call
 const getMockProduct = (id: string) => ({
@@ -67,9 +50,6 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [reportType, setReportType] = useState<string>("");
-  const [reportDescription, setReportDescription] = useState("");
 
   if (!id) {
     navigate(ROUTES.HOME);
@@ -85,27 +65,6 @@ const ProductDetail = () => {
       description: isFavorite 
         ? "Product removed from your favorites." 
         : "Product saved to your favorites.",
-    });
-  };
-
-  const handleReport = () => {
-    if (!reportType || !reportDescription.trim()) {
-      toast({
-        title: "Incomplete form",
-        description: "Please select a report type and provide details.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Submit report logic here
-    setReportDialogOpen(false);
-    setReportType("");
-    setReportDescription("");
-    
-    toast({
-      title: "Report submitted",
-      description: "Thank you for helping improve our data accuracy!",
     });
   };
 
@@ -291,50 +250,14 @@ const ProductDetail = () => {
             </Button>
           )}
 
-          <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full gap-2" size="lg">
-                <Flag className="h-4 w-4" />
+          <CommunityReportDialog 
+            productId={product.id}
+            trigger={
+              <Button variant="outline" className="w-full" size="lg">
                 Report Incorrect Data
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Report an Issue</DialogTitle>
-                <DialogDescription>
-                  Help us improve data accuracy by reporting issues you find.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="report-type">Issue Type</Label>
-                  <Select value={reportType} onValueChange={setReportType}>
-                    <SelectTrigger id="report-type">
-                      <SelectValue placeholder="Select issue type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="incorrect_data">Incorrect Data</SelectItem>
-                      <SelectItem value="greenwashing">Suspected Greenwashing</SelectItem>
-                      <SelectItem value="missing_data">Missing Information</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Please provide details about the issue..."
-                    value={reportDescription}
-                    onChange={(e) => setReportDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-                <Button onClick={handleReport} className="w-full">
-                  Submit Report
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+            }
+          />
         </div>
       </div>
     </Layout>
