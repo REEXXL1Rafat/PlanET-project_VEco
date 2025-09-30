@@ -9,6 +9,11 @@ import { ROUTES } from "@/constants/routes";
 import Index from "./pages/Index";
 import Scanner from "./pages/Scanner";
 import ProductDetail from "./pages/ProductDetail";
+import Search from "./pages/Search";
+import History from "./pages/History";
+import Profile from "./pages/Profile";
+import CompanyProfile from "./pages/CompanyProfile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,14 +30,14 @@ const App = () => (
               <Route path={ROUTES.HOME} element={<Index />} />
               <Route path={ROUTES.SCAN} element={<Scanner />} />
               <Route path={ROUTES.PRODUCT} element={<ProductDetail />} />
+              <Route path={ROUTES.COMPANY} element={<CompanyProfile />} />
+              <Route path={ROUTES.SEARCH} element={<Search />} />
+              <Route path={ROUTES.HISTORY} element={<History />} />
+              <Route path={ROUTES.PROFILE} element={<Profile />} />
+              <Route path={ROUTES.SETTINGS} element={<Settings />} />
               {/* Placeholder routes - will be implemented in later phases */}
-              <Route path={ROUTES.COMPANY} element={<div>Company Profile - Coming Soon</div>} />
-              <Route path={ROUTES.SEARCH} element={<div>Search - Coming Soon</div>} />
-              <Route path={ROUTES.HISTORY} element={<div>History - Coming Soon</div>} />
               <Route path={ROUTES.ALTERNATIVES} element={<div>Alternatives - Coming Soon</div>} />
               <Route path={ROUTES.EDUCATION} element={<div>Education - Coming Soon</div>} />
-              <Route path={ROUTES.PROFILE} element={<div>Profile - Coming Soon</div>} />
-              <Route path={ROUTES.SETTINGS} element={<div>Settings - Coming Soon</div>} />
               <Route path={ROUTES.LOGIN} element={<div>Login - Coming Soon</div>} />
               <Route path={ROUTES.REGISTER} element={<div>Register - Coming Soon</div>} />
               <Route path={ROUTES.ONBOARDING} element={<div>Onboarding - Coming Soon</div>} />
