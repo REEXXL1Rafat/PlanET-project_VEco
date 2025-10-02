@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { communityApi } from "@/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CommunityReportDialogProps {
   productId?: string;
@@ -25,28 +27,60 @@ export const CommunityReportDialog = ({
   companyId,
   trigger,
 }: CommunityReportDialogProps) => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [reportType, setReportType] = useState<string>("incorrect_data");
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = () => {
-    // Report submission logic will be implemented in later phases
-    console.log("Submitting report:", {
-      productId,
-      companyId,
-      reportType,
-      description,
-    });
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to report issues.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Report Submitted",
-      description: "Thank you for helping improve our data quality.",
-    });
+    if (!description.trim()) {
+      toast({
+        title: "Description Required",
+        description: "Please provide a description of the issue.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setOpen(false);
-    setDescription("");
-    setReportType("incorrect_data");
+    setIsSubmitting(true);
+    try {
+      await communityApi.createReport({
+        user_id: user.id,
+        product_id: productId,
+        company_id: companyId,
+        report_type: reportType as 'incorrect_data' | 'greenwashing' | 'missing_data',
+        description: description.trim(),
+      });
+
+      toast({
+        title: "Report Submitted",
+        description: "Thank you for helping improve our data quality.",
+      });
+
+      setOpen(false);
+      setDescription("");
+      setReportType("incorrect_data");
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast({
+        title: "Submission Failed",
+        description: "Unable to submit report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -112,11 +146,11 @@ export const CommunityReportDialog = ({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!description.trim()}>
-            Submit Report
+          <Button onClick={handleSubmit} disabled={!description.trim() || isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Report"}
           </Button>
         </div>
       </DialogContent>

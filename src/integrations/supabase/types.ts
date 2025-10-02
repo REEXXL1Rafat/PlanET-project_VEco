@@ -14,6 +14,304 @@ export type Database = {
   }
   public: {
     Tables: {
+      alternatives: {
+        Row: {
+          alternative_product_id: string
+          availability: string | null
+          created_at: string
+          id: string
+          original_product_id: string
+          price_comparison: number | null
+          reason: string
+        }
+        Insert: {
+          alternative_product_id: string
+          availability?: string | null
+          created_at?: string
+          id?: string
+          original_product_id: string
+          price_comparison?: number | null
+          reason: string
+        }
+        Update: {
+          alternative_product_id?: string
+          availability?: string | null
+          created_at?: string
+          id?: string
+          original_product_id?: string
+          price_comparison?: number | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alternatives_alternative_product_id_fkey"
+            columns: ["alternative_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alternatives_original_product_id_fkey"
+            columns: ["original_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string
+          id: string
+          product_id: string | null
+          report_type: Database["public"]["Enums"]["report_type"]
+          status: Database["public"]["Enums"]["report_status"]
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          product_id?: string | null
+          report_type: Database["public"]["Enums"]["report_type"]
+          status?: Database["public"]["Enums"]["report_status"]
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          product_id?: string | null
+          report_type?: Database["public"]["Enums"]["report_type"]
+          status?: Database["public"]["Enums"]["report_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          certifications: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          initiatives: string[] | null
+          logo_url: string | null
+          name: string
+          products_count: number | null
+          sustainability_rating: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          certifications?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          initiatives?: string[] | null
+          logo_url?: string | null
+          name: string
+          products_count?: number | null
+          sustainability_rating?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          certifications?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          initiatives?: string[] | null
+          logo_url?: string | null
+          name?: string
+          products_count?: number | null
+          sustainability_rating?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      data_sources: {
+        Row: {
+          eco_score_id: string
+          id: string
+          name: string
+          reliability_score: number | null
+          url: string | null
+        }
+        Insert: {
+          eco_score_id: string
+          id?: string
+          name: string
+          reliability_score?: number | null
+          url?: string | null
+        }
+        Update: {
+          eco_score_id?: string
+          id?: string
+          name?: string
+          reliability_score?: number | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_sources_eco_score_id_fkey"
+            columns: ["eco_score_id"]
+            isOneToOne: false
+            referencedRelation: "eco_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eco_scores: {
+        Row: {
+          carbon_emissions: number
+          energy_consumption: number
+          ethical_sourcing: number
+          id: string
+          last_updated: string
+          overall: number
+          product_id: string
+          recyclability: number
+        }
+        Insert: {
+          carbon_emissions: number
+          energy_consumption: number
+          ethical_sourcing: number
+          id?: string
+          last_updated?: string
+          overall: number
+          product_id: string
+          recyclability: number
+        }
+        Update: {
+          carbon_emissions?: number
+          energy_consumption?: number
+          ethical_sourcing?: number
+          id?: string
+          last_updated?: string
+          overall?: number
+          product_id?: string
+          recyclability?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eco_scores_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      educational_content: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          reading_time: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          reading_time?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          reading_time?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          category: string | null
+          certifications: string[] | null
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          certifications?: string[] | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          certifications?: string[] | null
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -41,6 +339,78 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_history: {
+        Row: {
+          id: string
+          product_id: string
+          scanned_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          scanned_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          scanned_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -49,7 +419,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      report_status: "pending" | "reviewed" | "resolved"
+      report_type: "incorrect_data" | "greenwashing" | "missing_data"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -176,6 +547,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      report_status: ["pending", "reviewed", "resolved"],
+      report_type: ["incorrect_data", "greenwashing", "missing_data"],
+    },
   },
 } as const
