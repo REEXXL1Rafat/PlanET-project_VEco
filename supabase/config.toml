@@ -1,1 +1,7 @@
 project_id = "gitqiabjinsmxmwyatgf"
+
+[functions.barcode-lookup]
+verify_jwt = false
+
+[functions.generate-eco-score]
+verify_jwt = false

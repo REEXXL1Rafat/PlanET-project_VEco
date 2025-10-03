@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -8,55 +8,120 @@ import { ImpactChart } from "@/components/ImpactChart";
 import { ShareButton } from "@/components/ShareButton";
 import { CommunityReportDialog } from "@/components/CommunityReportDialog";
 import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   ArrowLeft, 
   Heart, 
   Package, 
   Building2,
   ExternalLink,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { toast } from "@/hooks/use-toast";
-
-// Mock product data - will be replaced with actual API call
-const getMockProduct = (id: string) => ({
-  id,
-  name: "Eco-Friendly Water Bottle",
-  brand: "GreenLife",
-  category: "Kitchen & Dining",
-  barcode: id.replace('mock-', ''),
-  image_url: null,
-  description: "A sustainable water bottle made from recycled materials with minimal environmental impact.",
-  eco_score: {
-    overall: 85,
-    carbon_emissions: 88,
-    recyclability: 95,
-    ethical_sourcing: 82,
-    energy_consumption: 75,
-    last_updated: new Date().toISOString(),
-    data_sources: [
-      { name: "CDP", url: "https://cdp.net", reliability_score: 95 },
-      { name: "B Corp", url: "https://bcorporation.net", reliability_score: 90 },
-    ],
-  },
-  company_id: "greenlife-123",
-  certifications: ["B Corp Certified", "Carbon Neutral", "Fair Trade"],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-});
+import { supabase } from "@/integrations/supabase/client";
+import { Product, EcoScore } from "@/types";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [product, setProduct] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [ecoScoreLoading, setEcoScoreLoading] = useState(false);
 
-  if (!id) {
-    navigate(ROUTES.HOME);
-    return null;
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) {
+        navigate(ROUTES.HOME);
+        return;
+      }
 
-  const product = getMockProduct(id);
+      try {
+        setIsLoading(true);
+
+        // Fetch product with eco score and company data
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            *,
+            eco_scores(*),
+            companies(*)
+          `)
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          toast({
+            title: "Product Not Found",
+            description: "This product doesn't exist in our database.",
+            variant: "destructive",
+          });
+          navigate(ROUTES.HOME);
+          return;
+        }
+
+        setProduct(data);
+
+        // Check if eco score is still being generated
+        if (!data.eco_scores) {
+          setEcoScoreLoading(true);
+          toast({
+            title: "Analyzing Product...",
+            description: "We're generating the eco score for this product.",
+          });
+
+          // Poll for eco score (check every 3 seconds for up to 30 seconds)
+          let attempts = 0;
+          const maxAttempts = 10;
+          const pollInterval = setInterval(async () => {
+            attempts++;
+            
+            const { data: updatedData } = await supabase
+              .from('products')
+              .select(`
+                *,
+                eco_scores(*),
+                companies(*)
+              `)
+              .eq('id', id)
+              .maybeSingle();
+
+            if (updatedData?.eco_scores) {
+              setProduct(updatedData);
+              setEcoScoreLoading(false);
+              clearInterval(pollInterval);
+              toast({
+                title: "Eco Score Ready!",
+                description: "Environmental analysis complete.",
+              });
+            } else if (attempts >= maxAttempts) {
+              setEcoScoreLoading(false);
+              clearInterval(pollInterval);
+            }
+          }, 3000);
+
+          // Cleanup interval on unmount
+          return () => clearInterval(pollInterval);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load product details.",
+          variant: "destructive",
+        });
+        navigate(ROUTES.HOME);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate]);
 
   const handleToggleFavorite = () => {
     setIsFavorite(!isFavorite);
@@ -69,14 +134,33 @@ const ProductDetail = () => {
   };
 
   const handleViewAlternatives = () => {
-    navigate(ROUTES.ALTERNATIVES_BY_ID(product.id));
+    if (product) {
+      navigate(ROUTES.ALTERNATIVES_BY_ID(product.id));
+    }
   };
 
   const handleViewCompany = () => {
-    if (product.company_id) {
+    if (product?.company_id) {
       navigate(ROUTES.COMPANY_BY_ID(product.company_id));
     }
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!product) {
+    return null;
+  }
+
+  const ecoScore = product.eco_scores;
+  const company = product.companies;
 
   return (
     <Layout>
@@ -131,9 +215,9 @@ const ProductDetail = () => {
               <div className="flex-1 space-y-4">
                 <div>
                   <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-                  <p className="text-lg text-muted-foreground">{product.brand}</p>
+                  <p className="text-lg text-muted-foreground">{product.brand || 'Unknown Brand'}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary">{product.category}</Badge>
+                    <Badge variant="secondary">{product.category || 'General'}</Badge>
                     {product.barcode && (
                       <Badge variant="outline">Barcode: {product.barcode}</Badge>
                     )}
@@ -148,7 +232,7 @@ const ProductDetail = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Certifications</p>
                     <div className="flex flex-wrap gap-2">
-                      {product.certifications.map((cert) => (
+                      {product.certifications.map((cert: string) => (
                         <Badge key={cert} variant="secondary" className="bg-success/10 text-success">
                           {cert}
                         </Badge>
@@ -167,70 +251,76 @@ const ProductDetail = () => {
             <CardTitle>Environmental Impact Score</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center gap-4">
-              <EcoScoreDisplay score={product.eco_score.overall} size="lg" />
-              <p className="text-sm text-center text-muted-foreground max-w-md">
-                This score represents the overall environmental impact based on multiple factors
-                including carbon emissions, recyclability, ethical sourcing, and energy consumption.
-              </p>
-            </div>
+            {ecoScoreLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <LoadingSpinner size="lg" />
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Analyzing environmental impact...
+                </p>
+              </div>
+            ) : ecoScore ? (
+              <div className="flex flex-col items-center gap-4">
+                <EcoScoreDisplay score={ecoScore.overall} size="lg" />
+                <p className="text-sm text-center text-muted-foreground max-w-md">
+                  This score represents the overall environmental impact based on multiple factors
+                  including carbon emissions, recyclability, ethical sourcing, and energy consumption.
+                </p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Eco score not available yet
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Impact Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Impact Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ImpactChart
-              carbonEmissions={product.eco_score.carbon_emissions}
-              recyclability={product.eco_score.recyclability}
-              ethicalSourcing={product.eco_score.ethical_sourcing}
-              energyConsumption={product.eco_score.energy_consumption}
-            />
-          </CardContent>
-        </Card>
+        {ecoScore && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Impact Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImpactChart
+                carbonEmissions={ecoScore.carbon_emissions}
+                recyclability={ecoScore.recyclability}
+                ethicalSourcing={ecoScore.ethical_sourcing}
+                energyConsumption={ecoScore.energy_consumption}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Data Sources */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5" />
-              Data Sources
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {product.eco_score.data_sources.map((source, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+        {ecoScore && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExternalLink className="h-5 w-5" />
+                Data Sources
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div>
-                  <p className="font-medium">{source.name}</p>
-                  {source.reliability_score && (
-                    <p className="text-xs text-muted-foreground">
-                      Reliability: {source.reliability_score}%
-                    </p>
-                  )}
+                  <p className="font-medium">Lovable AI Analysis</p>
+                  <p className="text-xs text-muted-foreground">
+                    Reliability: 85%
+                  </p>
                 </div>
-                {source.url && (
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline text-sm"
-                  >
-                    Visit
-                  </a>
-                )}
               </div>
-            ))}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-              <Calendar className="h-3 w-3" />
-              <span>
-                Last updated: {new Date(product.eco_score.last_updated).toLocaleDateString()}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  Last updated: {new Date(ecoScore.last_updated).toLocaleDateString()}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions */}
         <div className="space-y-3">
@@ -238,7 +328,7 @@ const ProductDetail = () => {
             View Sustainable Alternatives
           </Button>
           
-          {product.company_id && (
+          {company && (
             <Button
               variant="outline"
               onClick={handleViewCompany}

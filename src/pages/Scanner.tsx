@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 const Scanner = () => {
   const navigate = useNavigate();
@@ -103,17 +104,51 @@ const Scanner = () => {
     }
   };
 
-  const handleScanSuccess = (barcode: string) => {
-    stopScanner();
-    toast({
-      title: "Barcode scanned!",
-      description: `Code: ${barcode}`,
-    });
-    
-    // Navigate to product detail (mock ID for now)
-    setTimeout(() => {
-      navigate(ROUTES.PRODUCT_BY_ID(`mock-${barcode}`));
-    }, 500);
+  const handleScanSuccess = async (barcode: string) => {
+    try {
+      await stopScanner();
+      setIsScanning(false);
+      
+      toast({
+        title: "Looking up product...",
+        description: `Barcode: ${barcode}`,
+      });
+
+      // Call barcode lookup edge function
+      const { data, error } = await supabase.functions.invoke('barcode-lookup', {
+        body: { barcode }
+      });
+
+      if (error) {
+        console.error('Error looking up product:', error);
+        toast({
+          title: "Product Not Found",
+          description: "This product is not in our database yet.",
+          variant: "destructive",
+        });
+        // Restart scanner
+        setTimeout(() => startScanner(), 2000);
+        return;
+      }
+
+      const product = data.product;
+      
+      toast({
+        title: "Product Found!",
+        description: product.name,
+      });
+      
+      // Navigate to product detail page
+      navigate(ROUTES.PRODUCT_BY_ID(product.id));
+    } catch (error) {
+      console.error('Error handling scan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process barcode. Please try again.",
+        variant: "destructive",
+      });
+      setTimeout(() => startScanner(), 2000);
+    }
   };
 
   const toggleFlashlight = async () => {
