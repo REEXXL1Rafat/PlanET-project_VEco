@@ -6,7 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScannerProvider } from "@/contexts/ScannerContext";
 import { ProductProvider } from "@/contexts/ProductContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ROUTES } from "@/constants/routes";
 import Index from "./pages/Index";
 import Scanner from "./pages/Scanner";
@@ -28,12 +31,15 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <AuthProvider>
-        <ScannerProvider>
-          <ProductProvider>
-            <TooltipProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ScannerProvider>
+            <ProductProvider>
+              <TooltipProvider>
               <Toaster />
               <Sonner />
+              <PWAInstallPrompt />
+              <OfflineIndicator />
               <Routes>
                 <Route path={ROUTES.LOGIN} element={<Auth />} />
                 <Route path={ROUTES.ONBOARDING} element={<Onboarding />} />
@@ -73,8 +79,9 @@ const App = () => (
           </ProductProvider>
         </ScannerProvider>
       </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+    </ThemeProvider>
+  </BrowserRouter>
+</QueryClientProvider>
 );
 
 export default App;

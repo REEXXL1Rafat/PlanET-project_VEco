@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Leaf, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,21 +20,27 @@ export const Header = () => {
         </Link>
 
         {user ? (
-          <Link to={ROUTES.PROFILE}>
-            <Avatar className="h-10 w-10 cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors">
-              <AvatarImage src="" alt="User" />
-              <AvatarFallback className="bg-primary/10">
-                <User className="h-5 w-5 text-primary" />
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link to={ROUTES.PROFILE}>
+              <Avatar className="h-10 w-10 cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors">
+                <AvatarImage src="" alt="User" />
+                <AvatarFallback className="bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
         ) : (
-          <Link to={ROUTES.LOGIN}>
-            <Button variant="outline" size="sm">
-              <LogIn className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link to={ROUTES.LOGIN}>
+              <Button variant="outline" size="sm">
+                <LogIn className="h-4 w-4 mr-2" />
+                Login
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </header>
