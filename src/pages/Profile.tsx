@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ROUTES } from "@/constants/routes";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   Settings,
   Award,
@@ -18,6 +19,8 @@ import {
   BookOpen,
   LogOut,
   User,
+  Flag,
+  History,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -33,6 +36,7 @@ import {
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const { canModerate } = useUserRole();
 
   const handleLogout = async () => {
     await signOut();
@@ -200,7 +204,7 @@ export default function Profile() {
             <Link to={ROUTES.HISTORY}>
               <Card className="hover:bg-accent transition-colors cursor-pointer">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <BookOpen className="h-8 w-8 text-primary" />
+                  <History className="h-8 w-8 text-primary" />
                   <div>
                     <h3 className="font-semibold">View Scan History</h3>
                     <p className="text-sm text-muted-foreground">
@@ -224,6 +228,22 @@ export default function Profile() {
                 </CardContent>
               </Card>
             </Link>
+
+            {canModerate && (
+              <Link to={ROUTES.REPORTS}>
+                <Card className="hover:bg-accent transition-colors cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <Flag className="h-8 w-8 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Moderate Reports</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Review community reports
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -20,6 +20,7 @@ import Education from "./pages/Education";
 import Alternatives from "./pages/Alternatives";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,11 @@ const App = () => (
                 <Route path={ROUTES.SETTINGS} element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                } />
+                <Route path={ROUTES.REPORTS} element={
+                  <ProtectedRoute>
+                    <Reports />
                   </ProtectedRoute>
                 } />
                 <Route path={ROUTES.EDUCATION} element={<Education />} />

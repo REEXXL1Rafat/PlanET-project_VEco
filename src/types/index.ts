@@ -87,6 +87,9 @@ export interface CommunityReport {
   description: string;
   status: 'pending' | 'reviewed' | 'resolved';
   created_at: string;
+  products?: { name: string } | null;
+  companies?: { name: string } | null;
+  profiles?: { display_name: string } | null;
 }
 
 export interface EducationalContent {

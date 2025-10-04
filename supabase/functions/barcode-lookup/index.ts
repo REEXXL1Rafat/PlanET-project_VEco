@@ -15,10 +15,20 @@ serve(async (req) => {
   try {
     const { barcode } = await req.json();
     
-    if (!barcode) {
+    // Input validation
+    if (!barcode || typeof barcode !== 'string') {
       return new Response(
-        JSON.stringify({ error: 'Barcode is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Valid barcode is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate barcode format (alphanumeric, 6-14 characters)
+    const barcodeRegex = /^[0-9A-Za-z]{6,14}$/;
+    if (!barcodeRegex.test(barcode)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid barcode format. Must be 6-14 alphanumeric characters.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 

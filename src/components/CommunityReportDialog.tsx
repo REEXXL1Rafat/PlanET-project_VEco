@@ -12,9 +12,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Flag } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { communityApi } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const reportSchema = z.object({
+  reportType: z.enum(['incorrect_data', 'greenwashing', 'missing_data'], {
+    required_error: "Please select a report type",
+  }),
+  description: z.string()
+    .trim()
+    .min(10, "Description must be at least 10 characters")
+    .max(2000, "Description must be less than 2000 characters"),
+});
 
 interface CommunityReportDialogProps {
   productId?: string;
@@ -32,24 +43,22 @@ export const CommunityReportDialog = ({
   const [reportType, setReportType] = useState<string>("incorrect_data");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async () => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "You must be logged in to report issues.",
-        variant: "destructive",
-      });
+      toast.error("You must be logged in to report issues");
       return;
     }
 
-    if (!description.trim()) {
-      toast({
-        title: "Description Required",
-        description: "Please provide a description of the issue.",
-        variant: "destructive",
-      });
+    // Validate input with Zod
+    const validation = reportSchema.safeParse({
+      reportType,
+      description,
+    });
+
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -63,21 +72,14 @@ export const CommunityReportDialog = ({
         description: description.trim(),
       });
 
-      toast({
-        title: "Report Submitted",
-        description: "Thank you for helping improve our data quality.",
-      });
+      toast.success("Report submitted successfully");
 
       setOpen(false);
       setDescription("");
       setReportType("incorrect_data");
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast({
-        title: "Submission Failed",
-        description: "Unable to submit report. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit report");
     } finally {
       setIsSubmitting(false);
     }

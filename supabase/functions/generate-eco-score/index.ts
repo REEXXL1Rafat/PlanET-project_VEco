@@ -14,11 +14,28 @@ serve(async (req) => {
 
   try {
     const { productId, productData } = await req.json();
-    
-    if (!productId) {
+
+    // Input validation
+    if (!productId || typeof productId !== 'string') {
       return new Response(
-        JSON.stringify({ error: 'Product ID is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Valid product ID is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(productId)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid product ID format' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (!productData || typeof productData !== 'object') {
+      return new Response(
+        JSON.stringify({ error: 'Valid product data is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 

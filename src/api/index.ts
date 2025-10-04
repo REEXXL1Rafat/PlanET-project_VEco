@@ -6,3 +6,4 @@ export * from './favorites';
 export * from './community';
 export * from './education';
 export * from './alternatives';
+export * from './roles';
