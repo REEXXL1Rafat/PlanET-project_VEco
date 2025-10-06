@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-eco-score]
 verify_jwt = false
+
+[functions.product-recognition]
+verify_jwt = false
