@@ -41,9 +41,9 @@ serve(async (req) => {
 
     console.log('Generating eco score for product:', productId);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+    if (!OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
     // Use Lovable AI to analyze product and generate eco scores
@@ -73,14 +73,14 @@ Return ONLY a JSON object with this exact structure:
   "reasoning": "<brief explanation>"
 }`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'deepseek/deepseek-chat-v3.1:free',
         messages: [
           { 
             role: 'system', 
@@ -145,8 +145,8 @@ Return ONLY a JSON object with this exact structure:
       .from('data_sources')
       .insert({
         eco_score_id: ecoScore.id,
-        name: 'Lovable AI Analysis',
-        url: 'https://lovable.dev/ai',
+        name: 'DeepSeek AI Analysis',
+        url: 'https://openrouter.ai',
         reliability_score: 85,
       });
 
