@@ -146,8 +146,8 @@ Return ONLY a JSON object with this exact structure:
       .insert({
         eco_score_id: ecoScore.id,
         name: 'DeepSeek AI Analysis',
-        url: 'https://openrouter.ai',
-        reliability_score: 85,
+        url: 'https://deepseek.com',
+        reliability_score: 80,
       });
 
     return new Response(
