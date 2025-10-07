@@ -145,6 +145,35 @@ const Scanner = () => {
         title: "Product Found!",
         description: product.name,
       });
+
+      // Generate eco score if not exists
+      if (!product.eco_score) {
+        const { error: ecoError } = await supabase.functions.invoke('generate-eco-score', {
+          body: {
+            productId: product.id,
+            productData: {
+              name: product.name,
+              brand: product.brand,
+              category: product.category,
+              description: product.description,
+              certifications: product.certifications
+            }
+          }
+        });
+
+        if (ecoError) {
+          console.error('Error generating eco score:', ecoError);
+        }
+      }
+
+      // Add to scan history
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('scan_history').insert({
+          user_id: user.id,
+          product_id: product.id
+        });
+      }
       
       // Navigate to product detail page
       navigate(ROUTES.PRODUCT_BY_ID(product.id));
@@ -232,6 +261,33 @@ const Scanner = () => {
           title: "Product Recognized!",
           description: `${recognition.product_name} (${Math.round(recognition.confidence * 100)}% confidence)`,
         });
+
+        // Generate eco score for the product
+        const { error: ecoError } = await supabase.functions.invoke('generate-eco-score', {
+          body: {
+            productId: product.id,
+            productData: {
+              name: product.name,
+              brand: product.brand,
+              category: product.category,
+              description: product.description,
+              certifications: product.certifications
+            }
+          }
+        });
+
+        if (ecoError) {
+          console.error('Error generating eco score:', ecoError);
+        }
+
+        // Add to scan history
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('scan_history').insert({
+            user_id: user.id,
+            product_id: product.id
+          });
+        }
 
         // Navigate to product detail page
         navigate(ROUTES.PRODUCT_BY_ID(product.id));

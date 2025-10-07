@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -24,59 +24,104 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Mock scan history data
-const mockHistory: Array<Product & { scannedAt: string }> = [
-  {
-    id: "1",
-    barcode: "123456789",
-    name: "Organic Cotton T-Shirt",
-    brand: "EcoWear",
-    category: "Clothing",
-    image_url: "/placeholder.svg",
-    scannedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    eco_score: {
-      overall: 85,
-      carbon_emissions: 80,
-      recyclability: 90,
-      ethical_sourcing: 85,
-      energy_consumption: 80,
-      last_updated: new Date().toISOString(),
-      data_sources: [{ name: "CDP" }, { name: "Fair Trade" }],
-    },
-    company_id: "c1",
-    certifications: ["Fair Trade", "B Corp"],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    barcode: "987654321",
-    name: "Reusable Water Bottle",
-    brand: "HydroGreen",
-    category: "Household",
-    image_url: "/placeholder.svg",
-    scannedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-    eco_score: {
-      overall: 92,
-      carbon_emissions: 90,
-      recyclability: 95,
-      ethical_sourcing: 90,
-      energy_consumption: 93,
-      last_updated: new Date().toISOString(),
-      data_sources: [{ name: "GRI" }, { name: "Energy Star" }],
-    },
-    company_id: "c2",
-    certifications: ["Carbon Neutral", "B Corp"],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+type HistoryItem = Product & { scannedAt: string };
 
 export default function History() {
-  const [history, setHistory] = useState(mockHistory);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sortBy, setSortBy] = useState("date");
   const [filterBy, setFilterBy] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: scanHistory, error } = await supabase
+        .from('scan_history')
+        .select(`
+          scanned_at,
+          products (
+            id,
+            name,
+            brand,
+            category,
+            image_url,
+            barcode,
+            description,
+            company_id,
+            certifications,
+            created_at,
+            updated_at,
+            eco_scores (
+              overall,
+              carbon_emissions,
+              recyclability,
+              ethical_sourcing,
+              energy_consumption,
+              last_updated,
+              data_sources (
+                name
+              )
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('scanned_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching history:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load scan history",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const historyItems: HistoryItem[] = scanHistory
+        .filter(item => item.products)
+        .map(item => {
+          const product = Array.isArray(item.products) ? item.products[0] : item.products;
+          const ecoScore = Array.isArray(product.eco_scores) && product.eco_scores.length > 0 
+            ? product.eco_scores[0] 
+            : null;
+          
+          return {
+            ...product,
+            scannedAt: item.scanned_at,
+            eco_score: ecoScore ? {
+              ...ecoScore,
+              data_sources: ecoScore.data_sources || []
+            } : undefined
+          };
+        });
+
+      setHistory(historyItems);
+    } catch (error) {
+      console.error('Error in fetchHistory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load scan history",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleExport = () => {
     const data = JSON.stringify(history, null, 2);
@@ -91,8 +136,39 @@ export default function History() {
     URL.revokeObjectURL(url);
   };
 
-  const handleClearHistory = () => {
-    setHistory([]);
+  const handleClearHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('scan_history')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error clearing history:', error);
+        toast({
+          title: "Error",
+          description: "Failed to clear history",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setHistory([]);
+      toast({
+        title: "History Cleared",
+        description: "Your scan history has been cleared",
+      });
+    } catch (error) {
+      console.error('Error in handleClearHistory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear history",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -107,8 +183,27 @@ export default function History() {
   };
 
   const averageEcoScore = history.length > 0
-    ? Math.round(history.reduce((acc, item) => acc + item.eco_score.overall, 0) / history.length)
+    ? Math.round(
+        history
+          .filter(item => item.eco_score)
+          .reduce((acc, item) => acc + (item.eco_score?.overall || 0), 0) / 
+        history.filter(item => item.eco_score).length
+      )
     : 0;
+
+  const topCategory = history.length > 0
+    ? history.reduce((acc, item) => {
+        const category = item.category || 'Unknown';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    : {};
+
+  const topCategoryName = Object.keys(topCategory).length > 0
+    ? Object.entries(topCategory).sort((a, b) => b[1] - a[1])[0][0]
+    : 'None';
+
+  const topCategoryCount = topCategory[topCategoryName] || 0;
 
   const sortedHistory = [...history].sort((a, b) => {
     if (sortBy === "date") {
@@ -123,8 +218,18 @@ export default function History() {
 
   const filteredHistory = sortedHistory.filter((item) => {
     if (filterBy === "all") return true;
-    return item.category.toLowerCase() === filterBy.toLowerCase();
+    return item.category?.toLowerCase() === filterBy.toLowerCase();
   });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <LoadingSpinner size="lg" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -199,10 +304,10 @@ export default function History() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Top Category</CardTitle>
-              <Badge variant="secondary">Household</Badge>
+              <Badge variant="secondary">{topCategoryName}</Badge>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
+              <div className="text-2xl font-bold">{topCategoryCount}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Most scanned category
               </p>
