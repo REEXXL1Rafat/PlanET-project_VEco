@@ -312,16 +312,23 @@ const Scanner = () => {
 
   return (
     <Layout showBottomNav={false}>
-      <div className="relative h-[calc(100vh-4rem)] bg-black">
+      <div className="relative h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
+        {/* Animated background particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-20 w-40 h-40 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-success/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+
         {/* Mode Selector */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
-          <Tabs value={scanMode} onValueChange={(v) => setScanMode(v as "barcode" | "image")} className="w-64">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="barcode">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
+          <Tabs value={scanMode} onValueChange={(v) => setScanMode(v as "barcode" | "image")} className="w-72">
+            <TabsList className="grid w-full grid-cols-2 bg-black/30 backdrop-blur-xl border border-white/10">
+              <TabsTrigger value="barcode" className="data-[state=active]:bg-primary/20 data-[state=active]:text-white">
                 <ScanLine className="h-4 w-4 mr-2" />
                 Barcode
               </TabsTrigger>
-              <TabsTrigger value="image">
+              <TabsTrigger value="image" className="data-[state=active]:bg-primary/20 data-[state=active]:text-white">
                 <Camera className="h-4 w-4 mr-2" />
                 Image
               </TabsTrigger>
@@ -334,29 +341,30 @@ const Scanner = () => {
             {/* Scanner viewfinder */}
             <div id="qr-reader" className="w-full h-full" />
 
-            {/* Scanning overlay */}
+            {/* Enhanced Scanning overlay */}
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <div className="w-64 h-64 border-4 border-primary rounded-lg shadow-lg">
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary" />
+                <div className="relative animate-scale-in">
+                  <div className="w-72 h-72 border-4 border-primary/50 rounded-3xl shadow-2xl backdrop-blur-sm bg-black/10">
+                    {/* Corner decorations */}
+                    <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-3xl" />
+                    <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-3xl" />
+                    <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-3xl" />
+                    <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-3xl" />
                   </div>
                   {isScanning && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-full h-1 bg-primary/50 animate-pulse" />
+                      <div className="w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse shadow-glow" />
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Instructions */}
-              <div className="absolute top-24 left-0 right-0 flex justify-center pointer-events-auto">
-                <Card className="bg-background/90 backdrop-blur">
+              <div className="absolute top-32 left-0 right-0 flex justify-center pointer-events-auto animate-fade-in">
+                <Card className="glass max-w-sm mx-4">
                   <CardContent className="p-4">
-                    <p className="text-sm text-center">
+                    <p className="text-sm text-center font-medium text-white">
                       {isScanning 
                         ? "Position barcode within the frame" 
                         : "Initializing camera..."}
@@ -369,23 +377,36 @@ const Scanner = () => {
         ) : (
           <>
             {/* Image Scan Mode */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
-              <Card className="bg-background/90 backdrop-blur max-w-md mx-4">
-                <CardContent className="p-6 text-center space-y-4">
-                  <Camera className="h-16 w-16 mx-auto text-primary" />
-                  <h3 className="text-xl font-semibold">Image Recognition</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Take a photo or upload an image of the product to identify it using AI
-                  </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4">
+              <Card className="glass max-w-md w-full animate-scale-in">
+                <CardContent className="p-8 text-center space-y-6">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl" />
+                    <Camera className="relative h-20 w-20 mx-auto text-primary drop-shadow-glow" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold text-white">AI Image Recognition</h3>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      Take a photo or upload an image of the product to identify it using advanced AI technology
+                    </p>
+                  </div>
+                  
                   <Button 
                     onClick={() => fileInputRef.current?.click()} 
                     size="lg" 
-                    className="w-full"
+                    className="w-full h-14 text-lg gap-3 shadow-glow hover:shadow-xl transition-all hover:-translate-y-0.5"
                     disabled={isProcessing}
                   >
-                    <Camera className="h-5 w-5 mr-2" />
-                    {isProcessing ? "Processing..." : "Capture / Upload Image"}
+                    <Camera className="h-6 w-6" />
+                    {isProcessing ? (
+                      <>
+                        <span>Processing</span>
+                        <div className="ml-2 h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      </>
+                    ) : "Capture / Upload Image"}
                   </Button>
+                  
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -401,14 +422,14 @@ const Scanner = () => {
         )}
 
         {/* Controls */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4 px-4">
+        <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-4 px-4 z-10">
           <Button
             variant="secondary"
             size="lg"
             onClick={handleBack}
-            className="rounded-full h-14 w-14 p-0"
+            className="rounded-full h-16 w-16 p-0 bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all hover:scale-110"
           >
-            <X className="h-6 w-6" />
+            <X className="h-7 w-7 text-white" />
           </Button>
 
           {scanMode === "barcode" && (
@@ -418,12 +439,12 @@ const Scanner = () => {
                   variant="secondary"
                   size="lg"
                   onClick={toggleFlashlight}
-                  className="rounded-full h-14 w-14 p-0"
+                  className="rounded-full h-16 w-16 p-0 bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all hover:scale-110"
                 >
                   {flashlightOn ? (
-                    <FlashlightOff className="h-6 w-6" />
+                    <FlashlightOff className="h-7 w-7 text-warning" />
                   ) : (
-                    <Flashlight className="h-6 w-6" />
+                    <Flashlight className="h-7 w-7 text-white" />
                   )}
                 </Button>
               )}
@@ -433,12 +454,12 @@ const Scanner = () => {
                   <Button
                     variant="secondary"
                     size="lg"
-                    className="rounded-full h-14 w-14 p-0"
+                    className="rounded-full h-16 w-16 p-0 bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all hover:scale-110"
                   >
-                    <Keyboard className="h-6 w-6" />
+                    <Keyboard className="h-7 w-7 text-white" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="glass">
                   <DialogHeader>
                     <DialogTitle>Enter Barcode Manually</DialogTitle>
                     <DialogDescription>
@@ -454,9 +475,10 @@ const Scanner = () => {
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleManualEntry()}
+                        className="h-12"
                       />
                     </div>
-                    <Button onClick={handleManualEntry} className="w-full">
+                    <Button onClick={handleManualEntry} className="w-full h-12">
                       Look Up Product
                     </Button>
                   </div>
@@ -468,17 +490,22 @@ const Scanner = () => {
 
         {/* Error message */}
         {error && (
-          <div className="absolute bottom-24 left-4 right-4">
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+          <div className="absolute bottom-32 left-4 right-4 animate-slide-up z-10">
+            <Alert variant="destructive" className="glass border-destructive/50">
+              <AlertDescription className="text-white font-medium">{error}</AlertDescription>
             </Alert>
           </div>
         )}
 
         {/* Loading state */}
         {((!isScanning && !error && scanMode === "barcode") || isProcessing) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <LoadingSpinner size="lg" className="text-primary" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20">
+            <div className="text-center space-y-4 animate-scale-in">
+              <LoadingSpinner size="lg" className="text-primary mx-auto" />
+              <p className="text-white font-medium">
+                {isProcessing ? "Analyzing image..." : "Initializing camera..."}
+              </p>
+            </div>
           </div>
         )}
       </div>
