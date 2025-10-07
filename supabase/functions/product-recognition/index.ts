@@ -24,31 +24,27 @@ serve(async (req) => {
 
     console.log('Starting product recognition...');
 
-    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-    if (!OPENROUTER_API_KEY) {
-      throw new Error('OPENROUTER_API_KEY is not configured');
+    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+    if (!GOOGLE_AI_API_KEY) {
+      throw new Error('GOOGLE_AI_API_KEY is not configured');
     }
 
     // Remove data:image prefix if present
     const base64Image = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
 
-    // Call OpenRouter API with DeepSeek model
+    // Call Google Gemini API
     const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-0528:free',
-          messages: [
+          contents: [
             {
-              role: 'user',
-              content: [
+              parts: [
                 {
-                  type: 'text',
                   text: `You are a product recognition system. Analyze the provided product image.
 Return structured JSON with the following fields:
 {
@@ -62,37 +58,43 @@ If multiple products are visible, return the most central/clear one.
 Return ONLY valid JSON, no additional text.`
                 },
                 {
-                  type: 'image_url',
-                  image_url: {
-                    url: imageBase64
+                  inline_data: {
+                    mime_type: "image/jpeg",
+                    data: base64Image
                   }
                 }
               ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            topK: 32,
+            topP: 1,
+            maxOutputTokens: 2048,
+          }
         }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const textContent = data.choices?.[0]?.message?.content;
+    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textContent) {
-      throw new Error('No response from OpenRouter API');
+      throw new Error('No response from Gemini API');
     }
 
-    console.log('AI response:', textContent);
+    console.log('Gemini response:', textContent);
 
     // Parse JSON from response
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('Could not parse JSON from AI response');
+      throw new Error('Could not parse JSON from Gemini response');
     }
 
     const productInfo = JSON.parse(jsonMatch[0]);
