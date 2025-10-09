@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.product-recognition]
 verify_jwt = false
+
+[functions.fetch-product-data]
+verify_jwt = false
+
+[functions.analyse-product]
+verify_jwt = false
