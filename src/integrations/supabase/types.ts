@@ -197,6 +197,7 @@ export type Database = {
           last_updated: string
           overall: number
           product_id: string
+          reasoning: string | null
           recyclability: number
         }
         Insert: {
@@ -207,6 +208,7 @@ export type Database = {
           last_updated?: string
           overall: number
           product_id: string
+          reasoning?: string | null
           recyclability: number
         }
         Update: {
@@ -217,6 +219,7 @@ export type Database = {
           last_updated?: string
           overall?: number
           product_id?: string
+          reasoning?: string | null
           recyclability?: number
         }
         Relationships: [
@@ -273,6 +276,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          ingredients: string | null
           name: string
           updated_at: string
         }
@@ -286,6 +290,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          ingredients?: string | null
           name: string
           updated_at?: string
         }
@@ -299,6 +304,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          ingredients?: string | null
           name?: string
           updated_at?: string
         }
