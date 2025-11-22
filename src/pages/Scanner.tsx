@@ -118,55 +118,29 @@ const Scanner = () => {
       setIsScanning(false);
       
       toast({
-        title: "Looking up product...",
-        description: `Barcode: ${barcode}`,
+        title: "Processing Scan...",
+        description: "Searching database and analyzing sustainability impact.",
       });
 
-      // Call barcode lookup edge function
-      const { data, error } = await supabase.functions.invoke('barcode-lookup', {
+      // CALL THE NEW PIPELINE FUNCTION
+      const { data, error } = await supabase.functions.invoke('process-scan', {
         body: { barcode }
       });
 
       if (error) {
-        console.error('Error looking up product:', error);
+        console.error('Scan pipeline error:', error);
         toast({
           title: "Product Not Found",
-          description: "This product is not in our database yet.",
+          description: "We couldn't identify this product in any database.",
           variant: "destructive",
         });
-        // Restart scanner
-        setTimeout(() => startScanner(), 2000);
+        setTimeout(() => startScanner(), 2000); // Restart scanner
         return;
       }
 
-      const product = data.product;
+      const product = data;
       
-      toast({
-        title: "Product Found!",
-        description: product.name,
-      });
-
-      // Generate eco score if not exists
-      if (!product.eco_score) {
-        const { error: ecoError } = await supabase.functions.invoke('generate-eco-score', {
-          body: {
-            productId: product.id,
-            productData: {
-              name: product.name,
-              brand: product.brand,
-              category: product.category,
-              description: product.description,
-              certifications: product.certifications
-            }
-          }
-        });
-
-        if (ecoError) {
-          console.error('Error generating eco score:', ecoError);
-        }
-      }
-
-      // Add to scan history
+      // Add to user history logic
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('scan_history').insert({
@@ -174,14 +148,20 @@ const Scanner = () => {
           product_id: product.id
         });
       }
+
+      toast({
+        title: "Success!",
+        description: `Found: ${product.name}`,
+      });
       
-      // Navigate to product detail page
+      // Navigate to details
       navigate(ROUTES.PRODUCT_BY_ID(product.id));
-    } catch (error) {
-      console.error('Error handling scan:', error);
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
       toast({
         title: "Error",
-        description: "Failed to process barcode. Please try again.",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
       setTimeout(() => startScanner(), 2000);

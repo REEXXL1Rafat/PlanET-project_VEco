@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.analyse-product]
 verify_jwt = false
+
+[functions.process-scan]
+verify_jwt = false
